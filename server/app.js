@@ -11,6 +11,12 @@ const uuid = require('uuid');
 //DATABSE
 mongoose.set('strictQuery', true); 
 mongoose.connect('mongodb://localhost:27017/mygame', { useNewUrlParser: true, useUnifiedTopology: true });
+const db = mongoose.connection;
+//TEST DB
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log("We're connected on the DB!");
+});
 // Create a game schema
 const gameSchema = new mongoose.Schema({
   id: { type: String, unique: true },
@@ -19,7 +25,7 @@ const gameSchema = new mongoose.Schema({
   publisher: String
 });
 // Create a model from the schema
-const Game = mongoose.model('Game', gameSchema);
+const Game = mongoose.model('Game', gameSchema,'mygame');
 
 
 
@@ -56,6 +62,7 @@ app.use((req, res, next) => {
 app.post('/api/start-game', async (req, res) => {
   try {
     const { id, name, releaseDate, publisher } = req.body;
+    // Check if id is the same (almost impossible with this long id)
     let existingGame=true
     while(existingGame){
       existingGame = await Game.findOne({ id });
