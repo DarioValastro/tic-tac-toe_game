@@ -1,11 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
 import reportWebVitals from './reportWebVitals';
-import StartGameButton from './components/StartGameButton';
-import Home from './pages/Home'
-import { Route } from 'react-router-dom';
 import RoutesApp from './routes'
 
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import './App.css'
- 
+import Home from './pages/Home'
 
 
 function TicTacToe() {
@@ -12,19 +12,27 @@ function TicTacToe() {
     if (board[index] !== "" || winner) {
       return;
     }
+    // Check the winner 
+    const inputDataRequest = { 
+      board: board,
+      gameId: window.location.href.split("/").pop(), //GameId based on url 
+      player:  currentPlayer, 
+      position: index  
+    };
 
-    const newBoard = [...board];
-    newBoard[index] = currentPlayer;
-    setBoard(newBoard);
-    console.log("Arriva almeno qui")
-    fetch("http://localhost:2999/api/check-winner", {
+    fetch("http://localhost:2999/api/move-and-check-winner", {
       method: "POST",
-      body: JSON.stringify({ board: newBoard }),
+      body: JSON.stringify(inputDataRequest),
       headers: { "Content-Type": "application/json" },
     })
       .then((response) => response.json())
       .then((data) => {
         console.log(data)
+
+        //const newBoard = [...board];
+        //newBoard[index] = currentPlayer;
+        setBoard(data.board);
+
         if (data.winner) {
           setWinner(data.winner);
         } else {
@@ -33,10 +41,13 @@ function TicTacToe() {
       });
   };
 
+
+
+
   return (
     <div>
       {winner ? (
-        <h1>{winner} wins!</h1>
+        <><h1>{winner} wins!</h1><Home /></>
       ) : (
         <>
           <h1>Tic Tac Toe</h1>

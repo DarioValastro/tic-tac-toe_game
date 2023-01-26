@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './StartGameButton.css';
+
 const uuid = require('uuid');
 
 function StartGameButton() {
-  const [gameId, setGameId] = useState(null);
+  const [gameId, setGameId] = useState("");
+
+  useEffect(() => {
+    //change the route after the gameId is set
+    if (gameId!=='') {
+      window.location.href = `/game/`.concat(gameId);
+    }
+  }, [gameId]);
 
   async function handleClick() {
     try {
       
       const gameData = {
         id: uuid.v4(),
-        name: 'GAME',
+        status: ["", "", "", "", "", "", "", "", ""],
         date: new Date(Date.now())
       };
       const res = await fetch('http://localhost:2999/api/start-game', { 
@@ -20,9 +28,11 @@ function StartGameButton() {
       });
       const data = await res.json();
       console.log(data);
-      setGameId(gameId);
+      //console.log(typeof(data))
+      setGameId(data.id);
+      console.log(gameId)
       // Navigate to the game page
-      window.location.href = `/game`;
+      //window.location.href = `/game/`.concat(gameId);
     } catch (err) {
       console.error(err);
     }

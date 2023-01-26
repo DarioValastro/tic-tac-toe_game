@@ -11,7 +11,7 @@ function RoutesApp() {
               <Link to='/'> </Link>
           </div>
           <Routes>
-              <Route path="/game" element={<TicTacToe />}></Route>
+              <Route path="/game/:id" element={<TicTacToe />}></Route>
               <Route path="/" element={<Home />}></Route>
           </Routes>
       
