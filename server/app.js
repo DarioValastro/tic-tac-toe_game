@@ -21,8 +21,7 @@ db.once('open', function() {
 const gameSchema = new mongoose.Schema({
   id: { type: String, unique: true },
   name: String,
-  releaseDate: Date,
-  publisher: String
+  date: mongoose.Schema.Types.Date
 });
 // Create a model from the schema
 const Game = mongoose.model('Game', gameSchema,'mygame');
@@ -61,7 +60,7 @@ app.use((req, res, next) => {
 // POST route to add a game
 app.post('/api/start-game', async (req, res) => {
   try {
-    const { id, name, releaseDate, publisher } = req.body;
+    const { id, name, date} = req.body;
     // Check if id is the same (almost impossible with this long id)
     let existingGame=true
     while(existingGame){
@@ -70,7 +69,7 @@ app.post('/api/start-game', async (req, res) => {
         id=uuid.v4()
       }
     }
-    const game = new Game({ id, name, releaseDate, publisher });
+    const game = new Game({ id, name, date});
     await game.save();
     res.status(201).json({ message: 'Game added successfully',id: id });
   } catch (error) {

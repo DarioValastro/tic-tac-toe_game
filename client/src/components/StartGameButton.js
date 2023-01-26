@@ -10,9 +10,8 @@ function StartGameButton() {
       
       const gameData = {
         id: uuid.v4(),
-        name: 'Super Mario Bros',
-        releaseDate: '1985-09-13',
-        publisher: 'Nintendo'
+        name: 'GAME',
+        date: new Date(Date.now())
       };
       const res = await fetch('http://localhost:2999/api/start-game', { 
         method: 'POST',
@@ -23,7 +22,7 @@ function StartGameButton() {
       console.log(data);
       setGameId(gameId);
       // Navigate to the game page
-      //window.location.href = `/game/${gameId}`;
+      window.location.href = `/game`;
     } catch (err) {
       console.error(err);
     }

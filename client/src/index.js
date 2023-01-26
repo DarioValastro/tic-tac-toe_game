@@ -4,13 +4,15 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import StartGameButton from './components/StartGameButton';
+import Home from './pages/Home'
+import { Route } from 'react-router-dom';
+import RoutesApp from './routes'
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
-    <StartGameButton/>
+    <RoutesApp />
   </React.StrictMode>
 );
 
