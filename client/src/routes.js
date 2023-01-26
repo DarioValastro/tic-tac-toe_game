@@ -9,10 +9,12 @@ function RoutesApp() {
           <div>
               <Link to='/game'> </Link>
               <Link to='/'> </Link>
+              <Link to='/home'> </Link>
           </div>
           <Routes>
               <Route path="/game/:id" element={<TicTacToe />}></Route>
               <Route path="/" element={<Home />}></Route>
+              <Route path="/home" element={<Home />}></Route>
           </Routes>
       
        </Router>

@@ -31,12 +31,6 @@ const Game = mongoose.model('Game', gameSchema,'mygame');
 
 const app = express();
 
-//WEBSOCKET SERVER
-const WebSocket = require('ws')
-const http = require("http")
-const server = http.createServer(app)
-const wss = new WebSocket.Server({server})
-
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -90,6 +84,27 @@ app.get('/api/game-status/:gameId', async (req, res) => {
   // Return game status
 });
 
+//TODO
+app.post("/api/join-game", (req, res) => {
+
+  const {gameID} = req.body;
+
+  Game.find({ id: gameID }, function (err, game) {
+    if(err) {
+        console.log("Error")
+        return
+    }
+    if(game.length === 0) {
+        const board = 'Game not found' ;
+        res.json({ board });
+        return;
+    }
+    const board= game[0].status;
+    res.json({ board });
+});
+  
+
+});
 
 //Chek winner and move
 app.post("/api/move-and-check-winner", (req, res) => {

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import './App.css'
-import Home from './pages/Home'
+import ReturnHomeButton from './components/ReturnHomeButton'
 
 
 function TicTacToe() {
@@ -41,13 +41,16 @@ function TicTacToe() {
       });
   };
 
-
+  
 
 
   return (
     <div>
       {winner ? (
-        <><h1>{winner} wins!</h1><Home /></>
+        <><h1>{winner} wins!</h1>
+        <br></br>
+        <ReturnHomeButton/>
+        </>
       ) : (
         <>
           <h1>Tic Tac Toe</h1>
@@ -63,6 +66,9 @@ function TicTacToe() {
             ))}
           </div>
           <h2>Current player: {currentPlayer}</h2>
+          <br></br>
+          <h3>Game Id: </h3>
+          <h4>{window.location.href.split("/").pop()}</h4>
         </>
       )}
     </div>
