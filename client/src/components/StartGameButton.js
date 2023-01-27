@@ -21,8 +21,7 @@ function StartGameButton() {
         status: ["", "", "", "", "", "", "", "", ""],
         dateStartGame: new Date(Date.now()),
         isMultiplayer: true,
-        firstMoveTime: new Date(Date.now()), //Actually, this is not the actual first move time
-        secondMoveTime: new Date(Date.now()) //Actually, this is not the actual second move time
+        firstMoveTime: new Date(Date.now()) //Actually, this is not the actual first move time
       };
       const res = await fetch('http://localhost:2999/api/start-game', { 
         method: 'POST',

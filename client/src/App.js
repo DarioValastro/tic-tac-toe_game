@@ -1,12 +1,58 @@
-import React, { useEffect, useState } from "react";
+import React, { useState,useEffect } from "react";
 import './App.css'
 import ReturnHomeButton from './components/ReturnHomeButton'
+import isTheTurnOfPlayer from './utils';
 
 
 function TicTacToe() {
   const [board, setBoard] = useState(["", "", "", "", "", "", "", "", ""]);
-  const [currentPlayer, setCurrentPlayer] = useState("X");
   const [winner, setWinner] = useState(null);
+  
+  function isTheTurnOfPlayer(board){
+    let count = 0;
+    for (let i = 0; i < board.length; i++) {
+        if (board[i] === "X" || board[i] === "O"){
+            count++;
+        }
+    }
+    if (count % 2 === 0){
+        return "X"
+    }else{
+        return "O"
+    }
+}
+
+
+  const getData = () => {
+    //setCurrentPlayer(isTheTurnOfPlayer(board));
+    const inputDataRequest = { 
+      board: board,
+      gameId: window.location.href.split("/").pop(), //GameId based on url 
+      player: isTheTurnOfPlayer(board)
+    };
+    fetch("http://localhost:2999/api/join-game-update-board", {
+      method: "POST",
+      body: JSON.stringify(inputDataRequest),
+      headers: { "Content-Type": "application/json" },
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data)
+      setBoard(data.board);
+    });
+  }
+
+  
+  useEffect(() => {
+    const INTERVAL_TO_UPDATE = 250; //Milliseconds
+    const intervalId = setInterval(() => {
+      getData();
+    }, INTERVAL_TO_UPDATE);
+
+    return () => clearInterval(intervalId);
+    
+  }, []);
+
 
   const handleClick = (index) => {
     if (board[index] !== "" || winner) {
@@ -16,7 +62,7 @@ function TicTacToe() {
     const inputDataRequest = { 
       board: board,
       gameId: window.location.href.split("/").pop(), //GameId based on url 
-      player:  currentPlayer, 
+      player:  isTheTurnOfPlayer(board), 
       position: index  
     };
 
@@ -36,14 +82,9 @@ function TicTacToe() {
         if (data.winner) {
           setWinner(data.winner);
         } else {
-          setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
         }
       });
   };
-
-  
-  //Check if already there is the game and if update the board 
-  
 
   return (
     <div>
@@ -66,7 +107,7 @@ function TicTacToe() {
               </div>
             ))}
           </div>
-          <h2>Current player: {currentPlayer}</h2>
+          <h2>Current player: {isTheTurnOfPlayer(board)} </h2>
           <br></br>
           <h3>Game Id: </h3>
           <h4>{window.location.href.split("/").pop()}</h4>
