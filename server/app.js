@@ -1,4 +1,4 @@
-const {isWinning,isNotPlayerTurn,isDraw} = require('./utils')
+const {isWinning,isNotPlayerTurn,isDraw,numberOfMoves} = require('./utils')
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -24,10 +24,31 @@ db.once('open', function() {
 const gameSchema = new mongoose.Schema({
   id: { type: String, unique: true },
   status: [],
-  date: mongoose.Schema.Types.Date
+  dateStartGame: mongoose.Schema.Types.Date,
+  isMultiplayer: Boolean,
+  firstMoveTime: mongoose.Schema.Types.Date
 });
+//Function to see if lower or higher than parameter secondsLimit
+gameSchema.methods.compareDates = function(secondsLimit=3) {
+  console.log(this.firstMoveTime)
+  const date1 = this.firstMoveTime;
+  const date2 = new Date(Date.now());
+  const difference = Math.abs(date2 - date1); // difference in milliseconds
+  const secondsDifference = difference / 1000;
+  console.log(secondsDifference)
+  if (secondsDifference > secondsLimit) {
+      console.log(`Difference between dates is greater than ${secondsLimit} seconds`);
+      return false;
+  } else {
+      console.log(`Difference between dates is less than or equal to ${secondsLimit} seconds`);
+      return true;
+  }
+};
 // Create a model from the schema
 const Game = mongoose.model('Game', gameSchema,'mygame');
+
+
+
 
 const app = express();
 
@@ -59,7 +80,7 @@ app.use((req, res, next) => {
 // POST route to add a game
 app.post('/api/start-game', async (req, res) => {
   try {
-    const { id, status, date} = req.body;
+    const { id, status, dateStartGame,isMultiplayer,firstMoveTime} = req.body;
     // Check if id is the same (almost impossible with this long id)
     let existingGame=true
     while(existingGame){
@@ -68,7 +89,7 @@ app.post('/api/start-game', async (req, res) => {
         id=uuid.v4()
       }
     }
-    const game = new Game({ id, status, date});
+    const game = new Game({ id, status, dateStartGame,isMultiplayer,firstMoveTime});
     await game.save();
     res.status(201).json({ message: 'Game added successfully',id: id });
   } catch (error) {
@@ -84,7 +105,7 @@ app.get('/api/game-status/:gameId', async (req, res) => {
   // Return game status
 });
 
-//TODO
+
 app.post("/api/join-game", (req, res) => {
 
   const {gameID} = req.body;
@@ -94,13 +115,16 @@ app.post("/api/join-game", (req, res) => {
         console.log("Error")
         return
     }
+    console.log(game.length)
     if(game.length === 0) {
-        const board = 'Game not found' ;
-        res.json({ board });
+        const isFoundGame = false ;
+        res.json({ isFoundGame });
         return;
+    }else{
+      const isFoundGame= true;
+      res.json({ isFoundGame });
     }
-    const board= game[0].status;
-    res.json({ board });
+
 });
   
 
@@ -117,8 +141,32 @@ app.post("/api/move-and-check-winner", (req, res) => {
     //Is turn of Player X or Player O ? 
     if(isNotPlayerTurn(board,player)===true){
       console.log("It's not your turn in multiplayer")
+      return ;
     }
 
+    //Is multiplayer or from single client
+    let numberMoves = numberOfMoves(board)
+    if(numberMoves===1){
+      Game.findOneAndUpdate({ id: gameId }, { $set: { firstMoveTime: new Date(Date.now())  } }, function (err, game) {
+        if (err) return handleError(err);
+      });
+    }
+    if(numberMoves===2){
+      //CHECK IF LESS THAN 3 SECONDS
+      Game.findOne({ id: gameId }, function (err, game) {
+        if (err) return handleError(err);
+        const SECONDS_LIMIT = 3;
+        if(game.compareDates(SECONDS_LIMIT)){
+          
+          //IF LESS --> MULTIPLAYER FLASE
+          Game.findOneAndUpdate({ id: gameId }, { $set: { isMultiplayer: false } }, function (err, game) {
+            if (err) return handleError(err);
+          });
+        }else{
+          //IF GREATER --> MULTIPLAYER CAN BE TRUE
+        }
+      });
+    }
 
     //Update database 
     Game.findOneAndUpdate({ id: gameId }, { $set: { status: board } }, function (err, game) {

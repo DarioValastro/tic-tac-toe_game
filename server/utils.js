@@ -42,6 +42,16 @@ function isDraw(board) {
     }
 }
 
+function numberOfMoves(board){
+  let count = 0;
+  for (let i = 0; i < board.length; i++) {
+      if (board[i] === "X" || board[i] === "O"){
+          count++;
+      }
+  }
+  return count;
+}
+
 function isNotPlayerTurn(board, player) {
     let xCount = 0;
     let oCount = 0;
@@ -61,4 +71,4 @@ function isNotPlayerTurn(board, player) {
   
 
 
-module.exports = {isWinning,isNotPlayerTurn,isDraw}
+module.exports = {isWinning,isNotPlayerTurn,isDraw,numberOfMoves}

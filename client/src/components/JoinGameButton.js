@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import './JoinGameButton.css';
 
 function JoinGameButton() {
   const [showPopup, setShowPopup] = useState(false);
   const [gameId, setGameId] = useState('');
   const [error, setError] = useState('');
+
+  useState(() => {
+    //change the route after the gameId is set
+    if (gameId!=='') {
+      window.location.href = `/game/`.concat(gameId);
+    }
+  }, [gameId]);
 
   function handleClick() {
     setShowPopup(true);
@@ -22,19 +29,22 @@ function JoinGameButton() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(inputDataRequest)
     })
+    .then((response) => response.json())
     .then((data) => {
-      
+      console.log(data)
       //TODO
-      if (data.board===undefined){ 
-        console.log("Ciao")
+      if (data.isFoundGame){ 
         setError("ATTENZIONE: il codice inserito non appartiene a nessuna partita!");
+        setShowPopup(false);
+      }
+      else{
+        setGameId({gameId});
       }
     })
     .catch(error => {
       console.error(error);
     });;
 
-    setShowPopup(false);
   }
 
   return (
