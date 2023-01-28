@@ -13,6 +13,7 @@ function TicTacToe() {
   const playerId = useRef("");
   const player1Id = useRef("");
   const player2Id = useRef("");
+  const [firstMoveDone,setFirstMoveDone] = useState(false);
 
   function setPlayer1Id(id){
     player1Id.current = id;
@@ -109,9 +110,19 @@ function TicTacToe() {
       }
     }
     if(xCount===0){
-      setPlayerId(player1Id.current);
+      if (firstMoveDone){
+        return;
+      }else{
+        setPlayerId(player1Id.current);
+        setFirstMoveDone(true)
+      }
     } else if(oCount===0){
-      setPlayerId(player2Id.current);
+      if(firstMoveDone){
+        return;
+      }else{
+        setPlayerId(player2Id.current);
+        setFirstMoveDone(true)
+      }
     }
     const inputDataRequest = { 
       board: board,
