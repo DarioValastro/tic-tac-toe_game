@@ -39,17 +39,23 @@ function TicTacToe() {
     .then((data) => {
       console.log(data)
       setBoard(data.board);
+      setWinner(data.winner);
     });
   }
 
   
   useEffect(() => {
-    const INTERVAL_TO_UPDATE = 250; //Milliseconds
-    const intervalId = setInterval(() => {
-      getData();
-    }, INTERVAL_TO_UPDATE);
-
-    return () => clearInterval(intervalId);
+    
+      const INTERVAL_TO_UPDATE = 250; //Milliseconds
+      const intervalId = setInterval(() => {
+        if(winner!=="Nobody"){
+          getData();
+        }
+        
+      }, INTERVAL_TO_UPDATE);
+      return () => clearInterval(intervalId);
+    
+    
     
   }, []);
 
@@ -81,7 +87,6 @@ function TicTacToe() {
 
         if (data.winner) {
           setWinner(data.winner);
-        } else {
         }
       });
   };

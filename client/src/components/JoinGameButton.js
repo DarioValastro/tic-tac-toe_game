@@ -28,8 +28,13 @@ function JoinGameButton(props) {
       console.log(data)
       //TODO
       if (data.isFoundGame){ 
-        //Move to page game updated with board
-        window.location.href = "/game/".concat(gameId);
+        if (data.isMultiplayer===false){
+          setError("ATTENZIONE: il codice inserito appartiene ad una partita Non multiplayer!");
+          setShowPopup(false);
+        }else{
+          //Move to page game updated with board
+          window.location.href = "/game/".concat(gameId);
+        }
       } else{
         setError("ATTENZIONE: il codice inserito non appartiene a nessuna partita!");
         setShowPopup(false);
