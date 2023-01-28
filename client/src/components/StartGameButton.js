@@ -15,12 +15,14 @@ function StartGameButton() {
 
   async function handleClick() {
     try {
-      
+      const idPlayer1 = uuid.v4();
       const gameData = {
         id: uuid.v4(),
         status: ["", "", "", "", "", "", "", "", ""],
         dateStartGame: new Date(Date.now()),
         isMultiplayer: true,
+        player1Id: idPlayer1,
+        player2Id: idPlayer1, //If nobody join, the id is the same
         firstMoveTime: new Date(Date.now()) //Actually, this is not the actual first move time
       };
       const res = await fetch('http://localhost:2999/api/start-game', { 
