@@ -4,8 +4,15 @@ A multiplayer Tic-Tac-Toe game built with ReactJS and NodeJS/Express.
 
 ## How to Play
 
+Click 
+- 'Start game' blue button to start a new game
+- 'Join game' green button to join a game
+
 Join the game using a unique ID assigned by the uuid library. 
-If two moves are made in less than 3 seconds, the game won't allow new users to join.
+
+Click the board's cell to mark 'X' or 'O'.
+
+If two moves are made in less than 3 seconds, the game won't allow users to join.
 
 ## Requirements
 - NodeJS and npm
