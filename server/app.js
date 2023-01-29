@@ -8,8 +8,18 @@ const mongoose = require('mongoose');
 const uuid = require('uuid');
 const helmet = require('helmet');
 
-
-//DATABSE
+/**
+ * DATABSE Mongo DB 
+ * 
+ * id: String
+ * status: array - It represent the board game
+ * dateStartGame: Date 
+ * isMultiplayer: Boolean
+ * player1Id: String,
+ * player2Id: String,
+ * firstMoveTime: Date
+ *  
+ */
 mongoose.set('strictQuery', true); 
 mongoose.connect('mongodb://localhost:27017/mygame', { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
@@ -47,22 +57,16 @@ gameSchema.methods.compareDates = function(secondsLimit=3) {
 // Create a model from the schema
 const Game = mongoose.model('Game', gameSchema,'mygame');
 
-
-
-
 const app = express();
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.json());
-
-app.use(helmet())
-
-//The port of process
-const port = process.env.PORT || 2999;
+// Middleware functions 
+app.use(logger('dev')); //log information about incoming requests to the console in a development environment.
+app.use(express.json()); //parses JSON request bodies
+app.use(express.urlencoded({ extended: false })); //parses the URL-encoded data submitted in the request body
+app.use(cookieParser()); //parses cookies sent in the headers of the request
+app.use(express.static(path.join(__dirname, 'public'))); //serves static files from the "public" directory
+app.use(bodyParser.json()); //parse the JSON in the body
+app.use(helmet()) //sets up various HTTP headers to help secure the application from some well-known web vulnerabilities by setting HTTP headers appropriately
 
 //CORS (Cross-Origin Resource Sharing) middleware
 const cors = require('cors');
@@ -77,7 +81,9 @@ app.use((req, res, next) => {
     next(); //move on to the next middleware in the chain
 });
 
-// POST route to add a game
+/**
+ * To start the game
+ */
 app.post('/api/start-game', async (req, res) => {
   try {
     const { id, status, dateStartGame,isMultiplayer,player1Id,player2Id,firstMoveTime} = req.body;
@@ -98,62 +104,74 @@ app.post('/api/start-game', async (req, res) => {
   }
 });
 
-
-app.get('/api/game-status/:gameId', async (req, res) => {
-  const game = await Game.findById(req.params.gameId);
-  if (!game) return res.status(404).json({ error: 'Game not found' });
-  // Return game status
-});
-
-
+/**
+ * To join a game
+ */
 app.post("/api/join-game", (req, res) => {
-  
-  const {gameId} = req.body;
-  
-  Game.findOne({ id: gameId },function (err, game) {
-    if(err) {
-        console.log("Error")
-        return
-    }
-    //console.log(game)
-    if(game.length === 0) {
-        const isFoundGame = false ;
-        res.json({ isFoundGame });
-        return;
-    }else{
-      const isFoundGame = true;
-      const board = game.status;
-      let isMultiplayer = true; 
-      if(game.isMultiplayer==false){
-        isMultiplayer= false;
-      }else{
-        Game.findOneAndUpdate({ id: gameId },{ $set: { player2Id: uuid.v4()  } },function (err, game) {})
-      }
-      res.json({ isFoundGame,board,isMultiplayer });
-    }
-  });
-});
-
-app.post("/api/join-game-update-board", (req, res) => {
+  //TODO: add filter to see if the game is finished and if it was open more than X time (e.g., 7 days)
   try{
-    const {gameId,player} = req.body;
-    Game.findOne({ id: gameId }, function (err, game) {
+    const {gameId} = req.body;
+  
+    Game.findOne({ id: gameId },function (err, game) {
       if(err) {
           console.log("Error")
           return
       }
-      //console.log(game)
+      if(game===null){
+        const isFoundGame = false ;
+        res.json({ isFoundGame });
+        return;
+      }else{
+        if(game.length === 0) {
+          const isFoundGame = false ;
+          res.json({ isFoundGame });
+          return;
+        }else{
+          const isFoundGame = true;
+          const board = game.status;
+          let isMultiplayer = true; 
+          if(game.isMultiplayer==false){
+            isMultiplayer= false;
+          }else{
+            Game.findOneAndUpdate({ id: gameId },{ $set: { player2Id: uuid.v4()  } },function (err, game) {})
+          }
+          res.json({ isFoundGame,board,isMultiplayer });
+        }
+       }
+    });
+  
+  }catch(error){
+    console.log(error)
+  }
+});
+
+
+/**
+ * To update game of a joined game
+ */
+app.post("/api/join-game-update-board", (req, res) => {
+  try{
+    const {gameId,player} = req.body;
+    // Finding the game in the database that matches the provided gameId
+    Game.findOne({ id: gameId }, function (err, game) {
+      if(err) {
+          console.log("Error")
+          return;
+      }
+      // Retrieving the current state of the game board
       const board = game.status;
-      //Check if winner
+      // Checking if there is a winner by calling the isWinning function
       let winner = isWinning(board); 
-      //Check if Draw
+      // Checking if the game is a draw by calling the isDraw function
       if(winner===null){
         if(isDraw(board)){
           winner = "Nobody"
         }
       }
+      // Retrieving the player1Id and player2Id from the game object
       player1Id=game.player1Id;
       player2Id=game.player2Id;
+      // Sending a JSON response containing the winner, board, player1Id, and player2Id
       res.json({ winner, board,player1Id,player2Id });
     });
   }catch (error) {
@@ -161,89 +179,50 @@ app.post("/api/join-game-update-board", (req, res) => {
     }
   });
 
-
-
-  //Check winner and move
+/**
+ * To update the board with users' move and check if match is finischer
+ */
  app.post("/api/move-and-check-winner", (req, res) => {
       try{
           const { board,gameId, player, position,playerId} = req.body;
-          console.log(playerId);
-          //Is turn of Player X or Player O ? //TODO: this doesn't work because we are calling players as X or O, instead we need to name it as 1 or 2 
           let player1Id = "";
           let player2Id = "";
+          // Finding the game in the database that matches the provided gameId
           Game.findOne({ id: gameId }, function (err, game) {
             if (err) return handleError(err);
-            //console.log("ENTRA QUIII");
-            //console.log(game.player1Id);
             player1Id=game.player1Id;
             player2Id=game.player2Id;
-            //console.log(player1Id)
-            //console.log(player2Id)
             if(player1Id!==player2Id){
               if(player1Id===playerId && player==="X"){
                 board[position]=player ;
-                console.log("X done")
               }
               if(player2Id===playerId && player==="O"){
                 board[position]=player ;
-                console.log("O done")
               }
             }else{
               board[position]=player ;
             }
 
-             /*
-          if(player1Id!==player2Id){
-
-           if(isTheTurnOfPlayer(board)==="X"){
-              //If is turn of Player X --> playerId sent by client should be the same as player 2 ID
-
-              if(player1Id!==playerId){
-                console.log("It is not the turn of the player 1!")
-              }else{
-                //Add move in the board
-                board[position]=player 
-              }
-            } else if(isTheTurnOfPlayer(board)==="O"){
-              //If is turn of Player O --> playerId sent by client should be the same as player 2 ID
-              if(player2Id!==playerId){
-                console.log("It s not the turn of player 2!")
-              } else {
-                //Add move in the board
-                board[position]=player 
-              }
-            }
-
-          }else{
-            //Add move in the board
-            board[position]=player 
-          }*/
-
           let numberMoves = numberOfMoves(board)
           //If is firt move, I add always the move in the board
           if(numberMoves===0){
             board[position]=player 
-          }
-
-          //Is multiplayer or from single client
-          if(numberMoves===1){
+          }else if(numberMoves===1){
             Game.findOneAndUpdate({ id: gameId }, { $set: { firstMoveTime: new Date(Date.now())  } }, function (err, game) {
               if (err) return handleError(err);
             });
-          }
-          if(numberMoves===2){
-            //CHECK IF LESS THAN 3 SECONDS
+          } else if(numberMoves===2){
+            //Check if less than SECONDS_LIMIT since first move
             Game.findOne({ id: gameId }, function (err, game) {
               if (err) return handleError(err);
-              const SECONDS_LIMIT = 3;
+              const SECONDS_LIMIT = 3; 
               if(game.compareDates(SECONDS_LIMIT)){
-                
-                //IF LESS --> MULTIPLAYER FALSE
+                //If less than SECONDS_LIMIT --> isMultiplayer FALSE
                 Game.findOneAndUpdate({ id: gameId }, { $set: { isMultiplayer: false } }, function (err, game) {
                   if (err) return handleError(err);
                 });
               }else{
-                //IF GREATER --> MULTIPLAYER CAN BE TRUE
+                //If greater than SECONDS_LIMIT --> isMultiplayer remains TRUE
               }
             });
           }
@@ -258,9 +237,8 @@ app.post("/api/join-game-update-board", (req, res) => {
           //Check if Draw
           if(winner===null && isDraw(board)){
             winner = "Nobody"
-          }
-          
-          //If no winner, variable winner is Null
+          }          
+          //If no winner --> var winner is Null
           res.json({ winner,board,player1Id,player2Id});
           });
         }catch(e){
@@ -268,7 +246,8 @@ app.post("/api/join-game-update-board", (req, res) => {
         }
   });
 
-  
+//The port of process
+const port = process.env.PORT || 2999;  
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

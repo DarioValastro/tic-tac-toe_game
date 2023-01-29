@@ -18,7 +18,7 @@ function JoinGameButton(props) {
     const inputDataRequest = {gameId}
     console.log(inputDataRequest)
     //Post call to join a game
-    const res = await fetch('http://localhost:2999/api/join-game', { 
+    await fetch('http://localhost:2999/api/join-game', { 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(inputDataRequest)

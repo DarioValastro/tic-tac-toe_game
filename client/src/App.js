@@ -1,19 +1,14 @@
 import React, { useState,useEffect,useRef  } from "react";
 import './App.css'
 import ReturnHomeButton from './components/ReturnHomeButton'
-import isTheTurnOfPlayer from './utils';
-import io from 'socket.io-client';
-
-
-
 
 function TicTacToe() {
   const [board, setBoard] = useState(["", "", "", "", "", "", "", "", ""]);
   const [winner, setWinner] = useState(null);
+  const [firstMoveDone,setFirstMoveDone] = useState(false);
   const playerId = useRef("");
   const player1Id = useRef("");
   const player2Id = useRef("");
-  const [firstMoveDone,setFirstMoveDone] = useState(false);
 
   function setPlayer1Id(id){
     player1Id.current = id;
@@ -26,7 +21,6 @@ function TicTacToe() {
   function setPlayerId(id){
     playerId.current = id;
   }
-
 
   function isTheTurnOfPlayer(board){
     let count = 0;
@@ -42,9 +36,6 @@ function TicTacToe() {
     }
   }
 
-
-
-
   const getData = () => {
     //setCurrentPlayer(isTheTurnOfPlayer(board));
     const inputDataRequest = { 
@@ -59,16 +50,13 @@ function TicTacToe() {
     })
     .then((response) => response.json())
     .then((data) => {
-      //console.log(data)
+
       setBoard(data.board);
-      //console.log(data.player1Id);
       setPlayer1Id(data.player1Id);
-      //console.log(player1Id);
       setPlayer2Id(data.player2Id);
       setWinner(data.winner);
     });
   }
-
   
   useEffect(() => {
       if(isTheTurnOfPlayer(board)==="X"){
@@ -78,12 +66,9 @@ function TicTacToe() {
       }
       const INTERVAL_TO_UPDATE = 200; //Milliseconds
       const intervalId = setInterval(() => {
-        //console.log(player1Id);
-        //console.log(player2Id);
+
         if(winner!=="Nobody" || winner===null){
           getData();
-          //console.log(board)
-
         }
         
       }, INTERVAL_TO_UPDATE);
@@ -92,7 +77,6 @@ function TicTacToe() {
     
     
   }, []);
-
 
   const handleClick = (index) => {
 
@@ -109,21 +93,23 @@ function TicTacToe() {
         oCount++;
       }
     }
-    if(xCount===0){
-      if (firstMoveDone){
-        return;
-      }else{
+    if(xCount === 0) {
+      if (firstMoveDone) {
+        if(player1Id.current !== player2Id.current) return;
+      } else {
         setPlayerId(player1Id.current);
-        setFirstMoveDone(true)
+        setFirstMoveDone(true);
       }
-    } else if(oCount===0){
-      if(firstMoveDone){
-        return;
-      }else{
+    } else if(oCount === 0) {
+      if(firstMoveDone) {
+        if(player1Id.current !== player2Id.current) return;
+      } else {
         setPlayerId(player2Id.current);
-        setFirstMoveDone(true)
+        setFirstMoveDone(true);
       }
     }
+    
+    
     const inputDataRequest = { 
       board: board,
       gameId: window.location.href.split("/").pop(), //GameId based on url 
